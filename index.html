@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bypass Link</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter the Link</h1>
+        <input type="text" id="linkInput" placeholder="Enter your link here">
+        <button onclick="bypass()">Bypass</button>
+    </div>
+
+    <script>
+        async function bypass() {
+            try {
+                let urid = sessionData[0].urid;
+                let link = document.getElementById("linkInput").value;
+
+                let server = initData[9];
+                server = (Number(urid.toString().substr(-5)) % 3) + '.' + server;
+
+                let websocket = new WebSocket(`wss://${server}/c?uid=${urid}&cat=54&key=${p.KEY}`);
+                await fetch(sessionData[0].action_pixel_url);
+                websocket.onopen = async function (event) {
+                    await fetch(`https://${server}/st?uid=${urid}&cat=54`, { method: 'POST' });
+                    await fetch(`https://${syncer}/td?ac=1&urid=${urid}&&cat=54&tid=${p.TID}`);
+                };
+                websocket.onmessage = function (event) {
+                    if (event.data.startsWith('r:')) {
+                        let data = event.data.split(':')[1];
+                        data = decryptData(data);
+                        window.location.assign(data);
+                    }
+                };
+            } catch (e) {
+                let reportError = confirm(`${e.message}\n\nWould you like to report this error?`);
+                if (reportError) {
+                    navigator.clipboard.writeText(e.message);
+                    window.location.replace(link || 'https://discord.gg/keybypass');
+                } else {
+                    window.location.reload();
+                }
+            }
+        }
+
+        function decryptData(encodedData, keyLength = 5) {
+            let decryptedData = '';
+            let base64Decoded = atob(encodedData);
+            let key = base64Decoded.substring(0, keyLength);
+            let encryptedContent = base64Decoded.substring(keyLength);
+
+            for (let i = 0; i < encryptedContent.length; i++) {
+                let charCodeEncrypted = encryptedContent.charCodeAt(i);
+                let charCodeKey = key.charCodeAt(i % key.length);
+                let decryptedCharCode = charCodeEncrypted ^ charCodeKey;
+
+                decryptedData += String.fromCharCode(decryptedCharCode);
+            }
+
+            return decryptedData;
+        }
+    </script>
+</body>
+</html>
